@@ -4,6 +4,8 @@ from urllib.robotparser import RobotFileParser
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
+    is_valid(url)
+    #TODO remove later, this is for testing
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
@@ -19,8 +21,15 @@ def extract_next_links(url, resp):
     print(type(resp.raw_response.content))
     print(urlparse(url).scheme + urlparse(url).hostname)
     page = resp.raw_response.content.decode("utf-8")
+    matches = re.findall(r"href=[\"'].*?[\"']", page)
 
+    #FOR TESTING TODO REMOVE
+    print("############### URLS SCRAPED ##############")
+    for match in matches:
+        print(match)
+    print("############### END URLS SCRAPED #################")
 
+    #FOR TESTING TODO REMOVE
     print("=============RESPONSE.CONTENT==============: \n", page, 
           "\n================END RESPONSE.CONTENT==================\n")
     return list()
@@ -50,15 +59,17 @@ def is_valid(url):
         raise
 
 def robotsCheck(url):
+    if not url:
+        return False
+    print("ROBOTSCHECK CALLED")
     parsed = urlparse(url)
-    robotsurl = parsed.scheme + parsed.hostname + "/robots.txt"
+    robotsurl = parsed.scheme + "://" + parsed.hostname + "/robots.txt"
     print("CHECKING ROBOTS URL:", robotsurl)
-    parser = RobotFileParser
+    parser = RobotFileParser()
     parser.set_url(robotsurl)
-    useragent = "nyhuang"
-    if(not parser.can_fetch(useragent, url)):
+    if(not parser.can_fetch("*", url)):
         print("ROBOTS CHECK FAILED FOR URL:", url)
-    return parser.can_fetch(useragent, url)
+    return parser.can_fetch("*", url)
 
     
 
