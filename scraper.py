@@ -1,5 +1,6 @@
 import re
 from urllib.parse import urlparse
+from urllib.robotparser import RobotFileParser
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -15,6 +16,13 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
+    print(type(resp.raw_response.content))
+    print(urlparse(url).scheme + urlparse(url).hostname)
+    page = resp.raw_response.content.decode("utf-8")
+
+
+    print("=============RESPONSE.CONTENT==============: \n", page, 
+          "\n================END RESPONSE.CONTENT==================\n")
     return list()
 
 def is_valid(url):
@@ -24,6 +32,8 @@ def is_valid(url):
     try:
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
+            return False
+        if not robotsCheck(url):
             return False
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
@@ -38,3 +48,18 @@ def is_valid(url):
     except TypeError:
         print ("TypeError for ", parsed)
         raise
+
+def robotsCheck(url):
+    parsed = urlparse(url)
+    robotsurl = parsed.scheme + parsed.hostname + "/robots.txt"
+    print("CHECKING ROBOTS URL:", robotsurl)
+    parser = RobotFileParser
+    parser.set_url(robotsurl)
+    useragent = "nyhuang"
+    if(not parser.can_fetch(useragent, url)):
+        print("ROBOTS CHECK FAILED FOR URL:", url)
+    return parser.can_fetch(useragent, url)
+
+    
+
+
