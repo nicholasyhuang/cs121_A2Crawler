@@ -9,7 +9,7 @@ def scraper(url, resp):
     #TODO remove later, this is for testing
     robotrules = dict()
     #robotsCheck(url, robotrules)
-    robotsCheck(url, robotrules)
+    #robotsCheck(url, robotrules)
     print(robotrules)
     is_valid(url)
 
