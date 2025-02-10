@@ -21,18 +21,21 @@ def extract_next_links(url, resp):
     print(type(resp.raw_response.content))
     print(urlparse(url).scheme + urlparse(url).hostname)
     page = resp.raw_response.content.decode("utf-8")
-    matches = re.findall(r"href=[\"'].*?[\"']", page)
-
+    matches = re.findall("href=[\"'].*?[\"']", page)
+    links = list()
     #FOR TESTING TODO REMOVE
     print("############### URLS SCRAPED ##############")
     for match in matches:
-        print(match)
+        scrapedurl = re.search("[\"']([^\"']*)[\"']", match).group(0)
+        print(scrapedurl[0] + "should not be quote")
+        #print("ALLOWED TO CRAWL ^^ = ", is_valid(scrapedurl))
+        #links.append(re.search("([\"']).*([\"'])", match).group(0))
     print("############### END URLS SCRAPED #################")
 
     #FOR TESTING TODO REMOVE
     print("=============RESPONSE.CONTENT==============: \n", page, 
           "\n================END RESPONSE.CONTENT==================\n")
-    return list()
+    return links
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
@@ -58,7 +61,7 @@ def is_valid(url):
         print ("TypeError for ", parsed)
         raise
 
-def robotsCheck(url):
+def robotsCheck(url): #returns false for everything right now TODO fix
     if not url:
         return False
     print("ROBOTSCHECK CALLED")
