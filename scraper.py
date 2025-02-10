@@ -7,11 +7,10 @@ def scraper(url, resp):
     links = extract_next_links(url, resp)
 
     #TODO remove later, this is for testing
-    robotrules = dict()
+    #robotrules = dict()
     #robotsCheck(url, robotrules)
-    #robotsCheck(url, robotrules)
-    print(robotrules)
-    is_valid(url)
+    #print(robotrules)
+    #is_valid(url)
 
     return [link for link in links if is_valid(link)]
 
@@ -35,11 +34,11 @@ def extract_next_links(url, resp):
     print("############### URLS SCRAPED ##############")
     for match in matches:
         scrapedurl = re.search("[\"'](.*)[\"']", match).group(1)
-        print(scrapedurl)
-        #if(robotsCheck(scrapedurl, robotrules) and is_valid(scrapedurl)):
-        #    print("VALID:", scrapedurl)
-        #else:
-        #    print("INVALID:", scrapedurl)
+        #print(scrapedurl)
+        if(robotsCheck(scrapedurl, robotrules) and is_valid(scrapedurl)):
+            print("VALID:", scrapedurl)
+        else:
+            print("INVALID:", scrapedurl)
     print("############### END URLS SCRAPED #################")
 
     #FOR TESTING TODO REMOVE
@@ -71,26 +70,27 @@ def is_valid(url):
         print ("TypeError for ", parsed)
         raise
 
-def robotsCheck(url, robotrules): #returns false for everything right now TODO fix
+def robotsCheck(url, robotrules): 
     if not url:
         return False
-    print("ROBOTSCHECK CALLED")
     parsed = urlparse(url)
+    if not parsed.hostname: 
+        return False
+    #TODO search for subdomains as well. it may be worth just matching with hard coded 4 domains
     robotspath = "robots/" + parsed.hostname + ".robots.txt"
     try:
         robotsfile = open(robotspath, "r")
         robotstext = robotsfile.read()
     except:
+        print("COULDN'T OPEN FILE PATH -", robotspath)
         return False
-    print("CHECKING ROBOTS URL:", robotsurl)
-    if robotsurl in robotrules.keys():
-        parser = robotrules[robotsurl]
+    print("CHECKING ROBOTS FILE OF:", parsed.hostname)
+    if parsed.hostname in robotrules.keys():
+        parser = robotrules[parsed.hostname]
     else:
         parser = RobotFileParser()
-        parser.set_url(robotsurl)
-        robotrules[robotsurl] = parser
-        print("HITTING URL...", robotsurl)
-        #parser.read() #TODO delay this, ddossing servers rn :sob:
+        parser.parse(robotstext)
+        robotrules[parsed.hostname] = parser
     if(not parser.can_fetch("*", parsed.path)):
         print("ROBOTS CHECK FAILED FOR URL:", url)
     return parser.can_fetch("*", parsed.path)
