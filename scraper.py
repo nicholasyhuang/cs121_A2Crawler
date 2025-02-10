@@ -1,11 +1,18 @@
 import re
 from urllib.parse import urlparse
 from urllib.robotparser import RobotFileParser
+import time
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
-    is_valid(url)
+
     #TODO remove later, this is for testing
+    robotrules = dict()
+    #robotsCheck(url, robotrules)
+    robotsCheck(url, robotrules)
+    print(robotrules)
+    is_valid(url)
+
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
@@ -19,17 +26,20 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     print(type(resp.raw_response.content))
-    print(urlparse(url).scheme + urlparse(url).hostname)
     page = resp.raw_response.content.decode("utf-8")
     matches = re.findall("href=[\"'].*?[\"']", page)
+
     links = list()
+    robotrules = dict()
     #FOR TESTING TODO REMOVE
     print("############### URLS SCRAPED ##############")
     for match in matches:
-        scrapedurl = re.search("[\"']([^\"']*)[\"']", match).group(0)
-        print(scrapedurl[0] + "should not be quote")
-        #print("ALLOWED TO CRAWL ^^ = ", is_valid(scrapedurl))
-        #links.append(re.search("([\"']).*([\"'])", match).group(0))
+        scrapedurl = re.search("[\"'](.*)[\"']", match).group(1)
+        print(scrapedurl)
+        #if(robotsCheck(scrapedurl, robotrules) and is_valid(scrapedurl)):
+        #    print("VALID:", scrapedurl)
+        #else:
+        #    print("INVALID:", scrapedurl)
     print("############### END URLS SCRAPED #################")
 
     #FOR TESTING TODO REMOVE
@@ -45,8 +55,8 @@ def is_valid(url):
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
-        if not robotsCheck(url):
-            return False
+        #if not robotsCheck(url):
+        #    return False
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -61,18 +71,25 @@ def is_valid(url):
         print ("TypeError for ", parsed)
         raise
 
-def robotsCheck(url): #returns false for everything right now TODO fix
+def robotsCheck(url, robotrules): #returns false for everything right now TODO fix
     if not url:
         return False
     print("ROBOTSCHECK CALLED")
     parsed = urlparse(url)
-    robotsurl = parsed.scheme + "://" + parsed.hostname + "/robots.txt"
+    if(parsed.scheme): robotsurl = parsed.scheme + "://" + parsed.hostname + "/robots.txt"
+    else: return False
     print("CHECKING ROBOTS URL:", robotsurl)
-    parser = RobotFileParser()
-    parser.set_url(robotsurl)
-    if(not parser.can_fetch("*", url)):
+    if robotsurl in robotrules.keys():
+        parser = robotrules[robotsurl]
+    else:
+        parser = RobotFileParser()
+        parser.set_url(robotsurl)
+        robotrules[robotsurl] = parser
+        print("HITTING URL...", robotsurl)
+        parser.read() #TODO delay this, ddossing servers rn :sob:
+    if(not parser.can_fetch("*", parsed.path)):
         print("ROBOTS CHECK FAILED FOR URL:", url)
-    return parser.can_fetch("*", url)
+    return parser.can_fetch("*", parsed.path)
 
     
 
