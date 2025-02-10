@@ -76,8 +76,12 @@ def robotsCheck(url, robotrules): #returns false for everything right now TODO f
         return False
     print("ROBOTSCHECK CALLED")
     parsed = urlparse(url)
-    if(parsed.scheme): robotsurl = parsed.scheme + "://" + parsed.hostname + "/robots.txt"
-    else: return False
+    robotspath = "robots/" + parsed.hostname + ".robots.txt"
+    try:
+        robotsfile = open(robotspath, "r")
+        robotstext = robotsfile.read()
+    except:
+        return False
     print("CHECKING ROBOTS URL:", robotsurl)
     if robotsurl in robotrules.keys():
         parser = robotrules[robotsurl]
@@ -86,7 +90,7 @@ def robotsCheck(url, robotrules): #returns false for everything right now TODO f
         parser.set_url(robotsurl)
         robotrules[robotsurl] = parser
         print("HITTING URL...", robotsurl)
-        parser.read() #TODO delay this, ddossing servers rn :sob:
+        #parser.read() #TODO delay this, ddossing servers rn :sob:
     if(not parser.can_fetch("*", parsed.path)):
         print("ROBOTS CHECK FAILED FOR URL:", url)
     return parser.can_fetch("*", parsed.path)
