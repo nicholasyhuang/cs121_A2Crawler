@@ -6,10 +6,11 @@ import time
 def scraper(url, resp):
     links = extract_next_links(url, resp)
 
-    #TODO process resp.raw_response.content
+    #TODO process resp.raw_response.content .. ? does that happen here or worker.py
 
     robotrules=dict()
-    return [link for link in links if (is_valid(link) and robotsCheck(url, robotrules))]
+    return [link for link in links if (is_valid(link) and robotsCheck(link, robotrules))]
+    #robotsCheck may be moved to is_valid, manual reading file each time (slower ...)
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -26,22 +27,24 @@ def extract_next_links(url, resp):
     linkmatches = re.findall("href=[\"'].*?[\"']", page)
     links = list()
     robotrules = dict() #TODO remove
-    #FOR TESTING TODO REMOVE
-    print("############### URLS SCRAPED ##############")
+
+    print("############### URLS SCRAPED ##############") #TODO remove
     for linkmatch in linkmatches:
         scrapedurl = re.search("[\"'](.*)[\"']", linkmatch).group(1)
         #TODO remove the fragment portion of URL
+        #removes fragment
+        #psurl = urlparse(scrapedurl)
+        #scrapedurl = psurl.scheme + "://" + psurl.netloc + psurl.path + psurl.query
         #links.append(scrapedurl) #add url to links
         #TODO remove this block, is for testing only
         if(robotsCheck(scrapedurl, robotrules) and is_valid(scrapedurl)):
             print("VALID:", scrapedurl)
         else:
             print("INVALID:", scrapedurl)
-    print("############### END URLS SCRAPED #################")
+    print("############### END URLS SCRAPED #################") #TODO remove
 
-    #FOR TESTING TODO REMOVE
     print("=============RESPONSE.CONTENT==============: \n", page, 
-          "\n================END RESPONSE.CONTENT==================\n")
+          "\n================END RESPONSE.CONTENT==================\n") #TODO remove
     
     return links
 
@@ -53,6 +56,7 @@ def is_valid(url):
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
+        #TODO check url for strange things like repetitive paterns and query parameters here
         #if not robotsCheck(url):
         #    return False
         return not re.match(
@@ -69,7 +73,7 @@ def is_valid(url):
         print ("TypeError for ", parsed)
         raise
 
-def robotsCheck(url, robotrules): 
+def robotsCheck(url, robotrules=dict()): 
     if not url:
         return False
     parsed = urlparse(url)
