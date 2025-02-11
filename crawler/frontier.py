@@ -13,6 +13,8 @@ class Frontier(object):
         self.config = config
         self.to_be_downloaded = list()
         self.visited_urls = set() #I added this !!!
+        self.subdomain_count = dict() #I added this!!!
+        #subdomain_count should be http://vision.ics.uci.edu -> 10, so [subdomain url] -> [# of pages in the subdomain]
         
         if not os.path.exists(self.config.save_file) and not restart:
             # Save file does not exist, but request to load save.
@@ -47,6 +49,7 @@ class Frontier(object):
             #i added this
             if completed:
                 self.visited_urls.add(url)
+                #TODO recount subdomains and stuff here too. add domain parameter
         self.logger.info(
             f"Found {tbd_count} urls to be downloaded from {total_count} "
             f"total urls discovered.")

@@ -1,3 +1,6 @@
+import re
+from bs4 import BeautifulSoup
+
 #performs simhash on text, returns int simhash
 def simhash(cleaned_text):
     SIMHASH_FINGERPRINT_SIZE = 64
@@ -47,4 +50,20 @@ def computeWordFrequencies(tokenlist):
         else:
             freq[token] = 1
     return freq
+
+#takes in raw html and extracts the text, returning it in a string
+def cleanHtml(rawtext):
+    soup = BeautifulSoup(rawtext, "html.parser")
+    cleanedtext = soup.get_text(separator=' ', strip=True)
+    return cleanedtext
+
+#takes in raw html and returns the wordFrequencies
+def getPageInfo(rawtext):
+    pass
+
+#TODO remove later
+if __name__ == '__main__':
+    file = open('utils/testhtml.txt') #test with string as well
+    rawtext = file.read()
+    cleanHtml(rawtext)
 

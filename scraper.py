@@ -6,7 +6,9 @@ import time
 def scraper(url, resp):
     links = extract_next_links(url, resp)
 
-    #TODO process resp.raw_response.content .. ? does that happen here or worker.py
+    #TODO process resp.raw_response.content .. ? and update wordcounts + longest page into save file
+    #stopwords should probably be ignored in this step
+    
 
     robotrules=dict()
     return [link for link in links if (is_valid(link) and robotsCheck(link, robotrules))]
