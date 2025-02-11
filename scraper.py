@@ -1,14 +1,22 @@
 import re
 from urllib.parse import urlparse
 from urllib.robotparser import RobotFileParser
-import time
+import pickle
+from utils import helpers
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
 
+    #TODO check response codes here?
     #TODO process resp.raw_response.content .. ? and update wordcounts + longest page into save file
     #stopwords should probably be ignored in this step
+    page = resp.raw_response.content.decode("utf-8")
+    tokens = helpers.tokenize(helpers.cleanHtml(page))
+    #sh = simhash(tokens)
+    #check for similar simhashes
+    #if similar, return [], don't want to scrape links from similar page might be trap
     
+    helpers.compsaveWordFrequencies(tokens) #computes and saves word frequencies into log, and updates longest word
 
     robotrules=dict()
     return [link for link in links if (is_valid(link) and robotsCheck(link, robotrules))]
@@ -24,8 +32,9 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    print(type(resp.raw_response.content))
     page = resp.raw_response.content.decode("utf-8")
+
+    #EXTRACT LINKS
     linkmatches = re.findall("href=[\"'].*?[\"']", page)
     links = list()
     robotrules = dict() #TODO remove
@@ -33,10 +42,10 @@ def extract_next_links(url, resp):
     print("############### URLS SCRAPED ##############") #TODO remove
     for linkmatch in linkmatches:
         scrapedurl = re.search("[\"'](.*)[\"']", linkmatch).group(1)
-        #TODO remove the fragment portion of URL
+        #TODO remove the fragment and maybe query? portion of URL
         #removes fragment
         #psurl = urlparse(scrapedurl)
-        #scrapedurl = psurl.scheme + "://" + psurl.netloc + psurl.path + psurl.query
+        #scrapedurl = psurl.scheme + "://" + psurl.netloc + psurl.path# + psurl.query
         #links.append(scrapedurl) #add url to links
         #TODO remove this block, is for testing only
         if(robotsCheck(scrapedurl, robotrules) and is_valid(scrapedurl)):
@@ -58,7 +67,7 @@ def is_valid(url):
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
-        #TODO check url for strange things like repetitive paterns and query parameters here
+        #TODO check url for strange things like repetitive patterns and query parameters here
         #if not robotsCheck(url):
         #    return False
         return not re.match(

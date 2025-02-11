@@ -4,7 +4,7 @@ import shelve
 from threading import Thread, RLock
 from queue import Queue, Empty
 
-from utils import get_logger, get_urlhash, normalize
+from utils import get_logger, get_urlhash, normalize, helpers
 from scraper import is_valid
 
 class Frontier(object):
@@ -13,7 +13,7 @@ class Frontier(object):
         self.config = config
         self.to_be_downloaded = list()
         self.visited_urls = set() #I added this !!!
-        self.subdomain_count = dict() #I added this!!!
+        #self.subdomain_count = dict() #I added this!!! #maybe this is better pickled
         #subdomain_count should be http://vision.ics.uci.edu -> 10, so [subdomain url] -> [# of pages in the subdomain]
         
         if not os.path.exists(self.config.save_file) and not restart:
@@ -29,6 +29,8 @@ class Frontier(object):
         # Load existing save file, or create one if it does not exist.
         self.save = shelve.open(self.config.save_file)
         if restart:
+            #if restarting, clear the wordfreqs log I added this !!!
+            helpers.clearLogs()
             for url in self.config.seed_urls:
                 self.add_url(url)
         else:
@@ -46,10 +48,9 @@ class Frontier(object):
             if not completed and is_valid(url):
                 self.to_be_downloaded.append(url)
                 tbd_count += 1
-            #i added this
+            #i added this if block
             if completed:
                 self.visited_urls.add(url)
-                #TODO recount subdomains and stuff here too. add domain parameter
         self.logger.info(
             f"Found {tbd_count} urls to be downloaded from {total_count} "
             f"total urls discovered.")
