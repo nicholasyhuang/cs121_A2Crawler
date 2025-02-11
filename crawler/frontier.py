@@ -6,6 +6,7 @@ from queue import Queue, Empty
 
 from utils import get_logger, get_urlhash, normalize, helpers
 from scraper import is_valid
+from utils import helpers
 
 class Frontier(object):
     def __init__(self, config, restart):
@@ -42,6 +43,7 @@ class Frontier(object):
 
     def _parse_save_file(self):
         ''' This function can be overridden for alternate saving techniques. '''
+        helpers.clearLogs() #I added this
         total_count = len(self.save)
         tbd_count = 0
         for url, completed in self.save.values():

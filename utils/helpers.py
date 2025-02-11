@@ -74,7 +74,6 @@ def tokenize(text):
     delims = set()
     for ch in delimcharacters:
         delims.add(ch)
-    #f = open(TextFilePath)
 
     alphnum = set()
     alphanumeric = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890'
@@ -99,12 +98,18 @@ def tokenize(text):
 
 def updateMostTokens(tokenlist):
 
-    with open('Logs/wordfreqs.log', 'rb') as f:
-        if(os.path.getsize('Logs/wordfreqs.log')==0):
-            freq = dict()
-        else:
-            freq = pickle.load(f)
+    try:
+        with open('Logs/wordfreqs.log', 'rb') as f:
+            if(os.path.getsize('Logs/wordfreqs.log')==0):
+                freq = dict()
+            else:
+                freq = pickle.load(f)
+            f.close()
+            
+    except FileNotFoundError:
+        f=open('Logs/wordfreqs.log', 'w')
         f.close()
+        freq=dict()
 
     if "most.tokens" in freq:
         freq['most.tokens'] = max(len(tokenlist), freq['most.tokens'])
@@ -116,12 +121,17 @@ def updateMostTokens(tokenlist):
         f.close()
 
 def compsaveWordFrequencies(tokenlist): #computes and saves word frequencies
-    if(os.path.getsize('Logs/wordfreqs.log')==0):
-        freq = dict()
-    else:
+    try:
         with open('Logs/wordfreqs.log', 'rb') as f:
-            freq = pickle.load(f)
+            if(os.path.getsize('Logs/wordfreqs.log')==0):
+                freq = dict()
+            else:
+                freq = pickle.load(f)
             f.close()
+    except FileNotFoundError:
+        f=open('Logs/wordfreqs.log', 'w')
+        f.close()
+        freq = dict()
 
     #most.tokens shouldb e moved to separate function
 
@@ -142,35 +152,32 @@ def cleanHtml(rawtext):
     cleanedtext = soup.get_text(separator=' ', strip=True)
     return cleanedtext
 
+def loadSimHashes():
+    simhashes = list()
+    try:
+        with open('Logs/simhashes.log', 'rb') as f:
+            if(os.path.getsize("Logs/simhashes.log")==0):
+                return simhashes
+            simhashes = pickle.load(f)
+            f.close()
+    except FileNotFoundError:
+        open('Logs/simhashes.log', 'w').close()
+    return simhashes
+
+def saveSimHash(simhashes):
+    with open('Logs/simhashes.log', 'wb') as f:
+        pickle.dump(simhashes, f)
+        f.close()
+    
+
 def clearLogs():
+    print("CLEARING LOGS.....", end="")
     open("Logs/wordfreqs.log", "w").close()
+    open('Logs/simhashes.log', 'w').close()
+    print("LOGS CLEARED!")
 
 #TODO remove later
 if __name__ == '__main__':
-    file1 = open('utils/testhtml.txt')
-    file2 = open('utils/testhtml copy.txt')
-    file3 = open('utils/testhtml2.txt')
-    tokens1 = cleanStopwords(tokenize(cleanHtml(file1.read())))
-    tokens2 = cleanStopwords(tokenize(cleanHtml(file2.read())))
-    tokens3 = cleanStopwords(tokenize(cleanHtml(file3.read())))
-    updateMostTokens(tokens1)
-    print(compsaveWordFrequencies(tokens1))
-    clearLogs()
-    #print(cleanStopwords(tokens))
-    h1 = simhash(tokens1)
-    h2 = simhash(tokens2)
-    h3 = simhash(tokens3)
-
-    print(h1)
-    print(h2)
-    print(h3)
-    if(similarHashes(h1, h2)):
-        print("YES doc1 doc2 SIMILAR (expected)")
-    else:
-        print("NO doc1 doc2 ARE NOT SIMILAR (shit)")
-
-    if(similarHashes(h1, h3)):
-        print("YES doc1 doc3 ARE SIMILAR (shit)")
-    else:
-        print("NO doc1 doc3 ARE NOT SIMILAR (expected)")
-    
+    f = open("Logs/unique_urlcount.txt", 'w')
+    f.write("Number of unique urls crawled: " +  str(123))
+    f.close()

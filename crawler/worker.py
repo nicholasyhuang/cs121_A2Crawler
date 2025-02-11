@@ -34,7 +34,10 @@ class Worker(Thread):
                     self.frontier.add_url(scraped_url)
             self.frontier.mark_url_complete(tbd_url)
             self.frontier.visited_urls.add(tbd_url) #update visited_urls
-            #TODO update subdomain_count here
             time.sleep(self.config.time_delay)
         #ADDED BY ME
+        #after finishes running, print size of frontier.visited_urls
+        f = open("Logs/unique_urlcount.txt", 'w')
+        f.write( "Number of unique urls crawled: " + str(len(self.frontier.visited_urls)) )
+        f.close()
         

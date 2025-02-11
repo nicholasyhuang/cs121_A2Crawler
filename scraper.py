@@ -2,22 +2,39 @@ import re
 from urllib.parse import urlparse
 from urllib.robotparser import RobotFileParser
 import pickle
+import random
 from utils import helpers
 
 def scraper(url, resp):
+    if(resp.status!=200): return []
+    else:
+        #TODO update the subdomain count here
+        
+        pass
     links = extract_next_links(url, resp)
-    #TODO check response codes here?
 
-    page = resp.raw_response.content.decode("utf-8")
+    try:
+        page = resp.raw_response.content.decode("utf-8")
+    except UnicodeDecodeError:
+        return []
+    
     tokens = helpers.tokenize(helpers.cleanHtml(page))
     helpers.updateMostTokens(tokens)
 
     cleanedTokens = helpers.cleanStopwords(tokens)
-    #sh = helpers.simhash(cleanedTokens)
-    #check for similar simhashes
-    #if similar, return [], don't want to scrape links from similar page might be trap
+    sh = helpers.simhash(cleanedTokens)
+    simhashes = helpers.loadSimHashes()
+    for seen_hash in simhashes:
+        if helpers.similarHashes(sh, seen_hash): #there exists a similar page !!!
+            return []
+    simhashes.append(sh)
+    helpers.saveSimHash(simhashes) #save the simhash into simhashes
     
-    helpers.compsaveWordFrequencies(tokens) #computes and saves word frequencies into log, and updates longest word
+
+    if(random.randint(1, 100)==97):
+        print("######## WORD FREQUENCIES ########", helpers.compsaveWordFrequencies(cleanedTokens), "######### END WORD FREQUENCIES ########") #computes and saves word frequencies into log, and updates longest word
+    else:
+        helpers.compsaveWordFrequencies(cleanedTokens)
 
     robotrules=dict()
     return [link for link in links if (is_valid(link) and robotsCheck(link, robotrules))]
@@ -33,30 +50,33 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    page = resp.raw_response.content.decode("utf-8")
+    try:
+        page = resp.raw_response.content.decode("utf-8")
+    except UnicodeDecodeError:
+        return []
 
     #EXTRACT LINKS
     linkmatches = re.findall("href=[\"'].*?[\"']", page)
     links = list()
     robotrules = dict() #TODO remove
 
-    print("############### URLS SCRAPED ##############") #TODO remove
+    #print("############### URLS SCRAPED ##############") #TODO remove
     for linkmatch in linkmatches:
         scrapedurl = re.search("[\"'](.*)[\"']", linkmatch).group(1)
         #TODO remove the fragment and maybe query? portion of URL
         #removes fragment
-        #psurl = urlparse(scrapedurl)
-        #scrapedurl = psurl.scheme + "://" + psurl.netloc + psurl.path# + psurl.query
-        #links.append(scrapedurl) #add url to links
+        psurl = urlparse(scrapedurl)
+        scrapedurl = psurl.scheme + "://" + psurl.netloc + psurl.path# + psurl.query
+        links.append(scrapedurl) #add url to links
         #TODO remove this block, is for testing only
+        '''
         if(robotsCheck(scrapedurl, robotrules) and is_valid(scrapedurl)):
             print("VALID:", scrapedurl)
         else:
             print("INVALID:", scrapedurl)
-    print("############### END URLS SCRAPED #################") #TODO remove
+        '''
+    #print("############### END URLS SCRAPED #################") #TODO remove
 
-    print("=============RESPONSE.CONTENT==============: \n", page, 
-          "\n================END RESPONSE.CONTENT==================\n") #TODO remove
     
     return links
 
@@ -106,6 +126,7 @@ def robotsCheck(url, robotrules=dict()):
     try:
         robotsfile = open(robotspath, "r")
         robotstext = robotsfile.readlines()
+        robotsfile.close()
     except:
         print("COULDN'T OPEN FILE PATH -", robotspath)
         return False
