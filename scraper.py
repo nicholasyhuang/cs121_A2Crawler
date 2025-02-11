@@ -6,13 +6,14 @@ from utils import helpers
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
-
     #TODO check response codes here?
-    #TODO process resp.raw_response.content .. ? and update wordcounts + longest page into save file
-    #stopwords should probably be ignored in this step
+
     page = resp.raw_response.content.decode("utf-8")
     tokens = helpers.tokenize(helpers.cleanHtml(page))
-    #sh = simhash(tokens)
+    helpers.updateMostTokens(tokens)
+
+    cleanedTokens = helpers.cleanStopwords(tokens)
+    #sh = helpers.simhash(cleanedTokens)
     #check for similar simhashes
     #if similar, return [], don't want to scrape links from similar page might be trap
     
