@@ -6,13 +6,10 @@ import time
 def scraper(url, resp):
     links = extract_next_links(url, resp)
 
-    #TODO remove later, this is for testing
-    #robotrules = dict()
-    #robotsCheck(url, robotrules)
-    #print(robotrules)
-    #is_valid(url)
+    #TODO process resp.raw_response.content
 
-    return [link for link in links if is_valid(link)]
+    robotrules=dict()
+    return [link for link in links if (is_valid(link) and robotsCheck(url, robotrules))]
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -28,14 +25,16 @@ def extract_next_links(url, resp):
     page = resp.raw_response.content.decode("utf-8")
     linkmatches = re.findall("href=[\"'].*?[\"']", page)
     links = list()
-    robotrules = dict()
+    robotrules = dict() #TODO remove
     #FOR TESTING TODO REMOVE
     print("############### URLS SCRAPED ##############")
     for linkmatch in linkmatches:
         scrapedurl = re.search("[\"'](.*)[\"']", linkmatch).group(1)
+        #TODO remove the fragment portion of URL
+        #links.append(scrapedurl) #add url to links
+        #TODO remove this block, is for testing only
         if(robotsCheck(scrapedurl, robotrules) and is_valid(scrapedurl)):
             print("VALID:", scrapedurl)
-            #add the url to links
         else:
             print("INVALID:", scrapedurl)
     print("############### END URLS SCRAPED #################")
@@ -43,6 +42,7 @@ def extract_next_links(url, resp):
     #FOR TESTING TODO REMOVE
     print("=============RESPONSE.CONTENT==============: \n", page, 
           "\n================END RESPONSE.CONTENT==================\n")
+    
     return links
 
 def is_valid(url):
