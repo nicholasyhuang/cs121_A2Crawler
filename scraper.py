@@ -26,17 +26,16 @@ def extract_next_links(url, resp):
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     print(type(resp.raw_response.content))
     page = resp.raw_response.content.decode("utf-8")
-    matches = re.findall("href=[\"'].*?[\"']", page)
-
+    linkmatches = re.findall("href=[\"'].*?[\"']", page)
     links = list()
     robotrules = dict()
     #FOR TESTING TODO REMOVE
     print("############### URLS SCRAPED ##############")
-    for match in matches:
-        scrapedurl = re.search("[\"'](.*)[\"']", match).group(1)
-        #print(scrapedurl)
+    for linkmatch in linkmatches:
+        scrapedurl = re.search("[\"'](.*)[\"']", linkmatch).group(1)
         if(robotsCheck(scrapedurl, robotrules) and is_valid(scrapedurl)):
             print("VALID:", scrapedurl)
+            #add the url to links
         else:
             print("INVALID:", scrapedurl)
     print("############### END URLS SCRAPED #################")
@@ -76,24 +75,32 @@ def robotsCheck(url, robotrules):
     parsed = urlparse(url)
     if not parsed.hostname: 
         return False
-    #TODO search for subdomains as well. it may be worth just matching with hard coded 4 domains
-    robotspath = "robots/" + parsed.hostname + ".robots.txt"
+    
+    if("cs.uci.edu" in parsed.hostname):
+        robotspath = "robots/cs.uci.edu.robots.txt"
+    elif "ics.uci.edu" in parsed.hostname:
+        robotspath = "robots/ics.uci.edu.robots.txt"
+    elif "informatics.uci.edu" in parsed.hostname:
+        robotspath = "robots/informatics.uci.edu.robots.txt"
+    elif "stat.uci.edu" in parsed.hostname:
+        robotspath = "robots/stat.uci.edu.robots.txt"
+    else: #the url is NOT one of the things we can crawl
+        return False 
+
     try:
         robotsfile = open(robotspath, "r")
-        robotstext = robotsfile.read()
+        robotstext = robotsfile.readlines()
     except:
         print("COULDN'T OPEN FILE PATH -", robotspath)
         return False
-    print("CHECKING ROBOTS FILE OF:", parsed.hostname)
+    
     if parsed.hostname in robotrules.keys():
         parser = robotrules[parsed.hostname]
     else:
         parser = RobotFileParser()
         parser.parse(robotstext)
         robotrules[parsed.hostname] = parser
-    if(not parser.can_fetch("*", parsed.path)):
-        print("ROBOTS CHECK FAILED FOR URL:", url)
-    return parser.can_fetch("*", parsed.path)
+    return parser.can_fetch("*", url)
 
     
 
