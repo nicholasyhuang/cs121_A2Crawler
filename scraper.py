@@ -8,23 +8,23 @@ from utils import helpers
 def scraper(url, resp):
     MIN_TOKENS = 25
     if(resp.status!=200): return []
-    else:
-        #TODO update the subdomain count here
 
-        pass
-    links = extract_next_links(url, resp)
-
+    helpers.updateDomainCnt(url)
+    
     try:
         page = resp.raw_response.content.decode("utf-8")
     except UnicodeDecodeError:
         return []
+    
+    links = extract_next_links(url, resp)
+
     
     tokens = helpers.tokenize(helpers.cleanHtml(page))
     helpers.updateMostTokens(tokens)
 
     cleanedTokens = helpers.cleanStopwords(tokens)
 
-    if cleanedTokens<MIN_TOKENS: return []
+    if len(cleanedTokens)<MIN_TOKENS: return [] #don't crawl if page doesn't have useful information
 
     sh = helpers.simhash(cleanedTokens) #SIMHASH CHECK FOR SIMILAR PAGES
     simhashes = helpers.loadSimHashes()
@@ -34,11 +34,7 @@ def scraper(url, resp):
     simhashes.append(sh)
     helpers.saveSimHash(simhashes) #save the simhash into simhashes
     
-    #TODO REMOVE but this is to show word frequencies roughly 1 time every 200 urls scanned
-    if(random.randint(1, 200)==97):
-        print("######## WORD FREQUENCIES ########\n", helpers.compsaveWordFrequencies(cleanedTokens), "\n######### END WORD FREQUENCIES ########\n") #computes and saves word frequencies into log, and updates longest word
-    else:
-        helpers.compsaveWordFrequencies(cleanedTokens)
+    helpers.compsaveWordFrequencies(cleanedTokens)
 
     robotrules=dict()
     return [link for link in links if (is_valid(link) and robotsCheck(link, robotrules))]
@@ -92,7 +88,9 @@ def is_valid(url):
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
-        #TODO check url for strange things like repetitive patterns and query parameters here
+        #TODO check url for strange things like repetitive patterns and weird query parameters here
+        if re.match(r".*wp-json.*", parsed.path.lower()):
+            return False
         #if not robotsCheck(url):
         #    return False
         #maybe need to match wp-json, these seem to be worthless
@@ -102,7 +100,7 @@ def is_valid(url):
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1|wp-json" #added wp-json to things to ignore
+            + r"|epub|dll|cnf|tgz|sha1|" 
             + r"|thmx|mso|arff|rtf|jar|csv"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
@@ -117,13 +115,13 @@ def robotsCheck(url, robotrules=dict()):
     if not parsed.hostname: 
         return False
     
-    if("cs.uci.edu" in parsed.hostname):
+    if(re.match(r".*[./]cs\.uci\.edu.*", url)): #TODO THIS NEEDS TO BE REWRITTEN !!!!! CECS IS BEING HIT RN A;SLDKFJ;ASKLDJF
         robotspath = "robots/cs.uci.edu.robots.txt"
-    elif "ics.uci.edu" in parsed.hostname:
+    elif re.match(r".*[./]ics\.uci\.edu.*", url):
         robotspath = "robots/ics.uci.edu.robots.txt"
-    elif "informatics.uci.edu" in parsed.hostname:
+    elif re.match(r".*[./]informatics\.uci\.edu.*", url):
         robotspath = "robots/informatics.uci.edu.robots.txt"
-    elif "stat.uci.edu" in parsed.hostname:
+    elif re.match(r".*[./]stat\.uci\.edu.*", url):
         robotspath = "robots/stat.uci.edu.robots.txt"
     else: #the url is NOT one of the things we can crawl
         return False 

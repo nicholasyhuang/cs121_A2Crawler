@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 import pickle
 import os
 from hashlib import md5
+from urllib.parse import urlparse
+
 
 #performs simhash on tokenized text (output of tokenize()), returns list of 1's and 0's, the simhash of the document
 def simhash(tokenlist):
@@ -97,7 +99,6 @@ def tokenize(text):
     return tokenlist
 
 def updateMostTokens(tokenlist):
-
     try:
         with open('Logs/wordfreqs.log', 'rb') as f:
             if(os.path.getsize('Logs/wordfreqs.log')==0):
@@ -119,6 +120,30 @@ def updateMostTokens(tokenlist):
     with open('Logs/wordfreqs.log', 'wb') as f:
         pickle.dump(freq, f)
         f.close()
+
+def updateDomainCnt(url):
+    try:
+        with open('Logs/subdomain_counts.log', 'rb') as f:
+            if(os.path.getsize('Logs/subdomain_counts.log')==0):
+                counts = dict()
+            else:
+                counts = pickle.load(f)
+            f.close()
+    except FileNotFoundError:
+        open('Logs/subdomain_counts.log', 'w').close()
+        counts = dict()
+    
+    parsed = urlparse(url)
+    if(re.match(r'.*\.ics.uci.edu.*', url)):
+        domain = parsed.scheme + "://" + parsed.hostname
+        if domain in counts:
+            counts[domain] += 1
+        else:
+            counts[domain] = 1
+    f = open('Logs/subdomain_counts.log', 'wb')
+    pickle.dump(counts, f)
+    return counts
+
 
 def compsaveWordFrequencies(tokenlist): #computes and saves word frequencies
     try:
@@ -174,10 +199,17 @@ def clearLogs():
     print("CLEARING LOGS.....", end="")
     open("Logs/wordfreqs.log", "w").close()
     open('Logs/simhashes.log', 'w').close()
+    open('Logs/subdomain_counts.log', 'w').close()
     print("LOGS CLEARED!")
 
 #TODO remove later
 if __name__ == '__main__':
-    f = open("Logs/unique_urlcount.txt", 'w')
-    f.write("Number of unique urls crawled: " +  str(123))
-    f.close()
+    with open('Logs/wordfreqs.log', 'rb') as f:
+        h = pickle.load(f) 
+        print(h)
+    with open('Logs/simhashes.log', 'rb') as f:
+        h = pickle.load(f)
+        print(len(h))
+    with open('Logs/subdomain_counts.log', 'rb') as f:
+        h = pickle.load(f)
+        print(h)
