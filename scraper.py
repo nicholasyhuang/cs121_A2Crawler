@@ -6,10 +6,11 @@ import random
 from utils import helpers
 
 def scraper(url, resp):
+    MIN_TOKENS = 25
     if(resp.status!=200): return []
     else:
         #TODO update the subdomain count here
-        
+
         pass
     links = extract_next_links(url, resp)
 
@@ -22,7 +23,10 @@ def scraper(url, resp):
     helpers.updateMostTokens(tokens)
 
     cleanedTokens = helpers.cleanStopwords(tokens)
-    sh = helpers.simhash(cleanedTokens)
+
+    if cleanedTokens<MIN_TOKENS: return []
+
+    sh = helpers.simhash(cleanedTokens) #SIMHASH CHECK FOR SIMILAR PAGES
     simhashes = helpers.loadSimHashes()
     for seen_hash in simhashes:
         if helpers.similarHashes(sh, seen_hash): #there exists a similar page !!!
@@ -30,9 +34,9 @@ def scraper(url, resp):
     simhashes.append(sh)
     helpers.saveSimHash(simhashes) #save the simhash into simhashes
     
-
-    if(random.randint(1, 100)==97):
-        print("######## WORD FREQUENCIES ########", helpers.compsaveWordFrequencies(cleanedTokens), "######### END WORD FREQUENCIES ########") #computes and saves word frequencies into log, and updates longest word
+    #TODO REMOVE but this is to show word frequencies roughly 1 time every 200 urls scanned
+    if(random.randint(1, 200)==97):
+        print("######## WORD FREQUENCIES ########\n", helpers.compsaveWordFrequencies(cleanedTokens), "\n######### END WORD FREQUENCIES ########\n") #computes and saves word frequencies into log, and updates longest word
     else:
         helpers.compsaveWordFrequencies(cleanedTokens)
 
@@ -66,7 +70,7 @@ def extract_next_links(url, resp):
         #TODO remove the fragment and maybe query? portion of URL
         #removes fragment
         psurl = urlparse(scrapedurl)
-        scrapedurl = psurl.scheme + "://" + psurl.netloc + psurl.path# + psurl.query
+        scrapedurl = psurl.scheme + "://" + psurl.netloc + psurl.path# + psurl.query 
         links.append(scrapedurl) #add url to links
         #TODO remove this block, is for testing only
         '''
@@ -91,13 +95,14 @@ def is_valid(url):
         #TODO check url for strange things like repetitive patterns and query parameters here
         #if not robotsCheck(url):
         #    return False
+        #maybe need to match wp-json, these seem to be worthless
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1"
+            + r"|epub|dll|cnf|tgz|sha1|wp-json" #added wp-json to things to ignore
             + r"|thmx|mso|arff|rtf|jar|csv"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
