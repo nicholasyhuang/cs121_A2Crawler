@@ -58,26 +58,12 @@ def extract_next_links(url, resp):
     #EXTRACT LINKS
     linkmatches = re.findall("href=[\"'].*?[\"']", page)
     links = list()
-    robotrules = dict() #TODO remove
 
-    #print("############### URLS SCRAPED ##############") #TODO remove
     for linkmatch in linkmatches:
         scrapedurl = re.search("[\"'](.*)[\"']", linkmatch).group(1)
-        #TODO remove the fragment and maybe query? portion of URL
-        #removes fragment
         psurl = urlparse(scrapedurl)
         scrapedurl = psurl.scheme + "://" + psurl.netloc + psurl.path# + psurl.query 
         links.append(scrapedurl) #add url to links
-        #TODO remove this block, is for testing only
-        '''
-        if(robotsCheck(scrapedurl, robotrules) and is_valid(scrapedurl)):
-            print("VALID:", scrapedurl)
-        else:
-            print("INVALID:", scrapedurl)
-        '''
-    #print("############### END URLS SCRAPED #################") #TODO remove
-
-    
     return links
 
 def is_valid(url):
@@ -88,14 +74,10 @@ def is_valid(url):
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
-        #TODO check url for strange things like repetitive patterns and weird query parameters here
         if re.match(r".*wp-json.*", parsed.path.lower()):
             return False
         if re.match(r".*(\/feed)\/*$", parsed.path.lower()):
             return False
-        #if not robotsCheck(url):
-        #    return False
-        #maybe need to match wp-json, these seem to be worthless
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -117,7 +99,7 @@ def robotsCheck(url, robotrules=dict()):
     if not parsed.hostname: 
         return False
     
-    if(re.match(r".*[./]cs\.uci\.edu.*", url)): #TODO THIS NEEDS TO BE REWRITTEN !!!!! CECS IS BEING HIT RN A;SLDKFJ;ASKLDJF
+    if(re.match(r".*[./]cs\.uci\.edu.*", url)):
         robotspath = "robots/cs.uci.edu.robots.txt"
     elif re.match(r".*[./]ics\.uci\.edu.*", url):
         robotspath = "robots/ics.uci.edu.robots.txt"

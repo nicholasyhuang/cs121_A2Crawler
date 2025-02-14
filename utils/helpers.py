@@ -100,15 +100,15 @@ def tokenize(text):
 
 def updateMostTokens(tokenlist, url):
     try:
-        with open('Logs/wordfreqs.log', 'rb') as f:
-            if(os.path.getsize('Logs/wordfreqs.log')==0):
+        with open('Logs/mosttokens.log', 'rb') as f:
+            if(os.path.getsize('Logs/mosttokens.log')==0):
                 freq = dict()
             else:
                 freq = pickle.load(f)
             f.close()
             
     except FileNotFoundError:
-        f=open('Logs/wordfreqs.log', 'w')
+        f=open('Logs/mosttokens.log', 'w')
         f.close()
         freq=dict()
 
@@ -121,7 +121,7 @@ def updateMostTokens(tokenlist, url):
         freq['most.tokens'] = len(tokenlist)
         freq['most.url'] = url
     
-    with open('Logs/wordfreqs.log', 'wb') as f:
+    with open('Logs/mosttokens.log', 'wb') as f:
         pickle.dump(freq, f)
         f.close()
 
@@ -206,11 +206,15 @@ def clearLogs():
     open('Logs/subdomain_counts.log', 'w').close()
     print("LOGS CLEARED!")
 
-#TODO remove later
 if __name__ == '__main__':
 
     with open('Logs/wordfreqs.log', 'rb') as f:
         h = pickle.load(f) 
+        sorted_wordfreqs = dict(sorted(h.items(), key=lambda item: item[1], reverse=True))
+        print(sorted_wordfreqs)
+        f.close()
+    with open('Logs/mosttokens.log', 'rb') as f:
+        h = pickle.load(f)
         print(h)
         f.close()
     with open('Logs/simhashes.log', 'rb') as f:
