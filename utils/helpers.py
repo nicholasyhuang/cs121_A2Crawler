@@ -98,7 +98,7 @@ def tokenize(text):
 
     return tokenlist
 
-def updateMostTokens(tokenlist):
+def updateMostTokens(tokenlist, url):
     try:
         with open('Logs/wordfreqs.log', 'rb') as f:
             if(os.path.getsize('Logs/wordfreqs.log')==0):
@@ -113,9 +113,13 @@ def updateMostTokens(tokenlist):
         freq=dict()
 
     if "most.tokens" in freq:
-        freq['most.tokens'] = max(len(tokenlist), freq['most.tokens'])
+        if(len(tokenlist) > freq['most.tokens']):
+            freq['most.tokens'] = len(tokenlist)
+            freq['most.url'] = url
+        #freq['most.tokens'] = max(len(tokenlist), freq['most.tokens'])
     else:
         freq['most.tokens'] = len(tokenlist)
+        freq['most.url'] = url
     
     with open('Logs/wordfreqs.log', 'wb') as f:
         pickle.dump(freq, f)
@@ -140,8 +144,9 @@ def updateDomainCnt(url):
             counts[domain] += 1
         else:
             counts[domain] = 1
-    f = open('Logs/subdomain_counts.log', 'wb')
-    pickle.dump(counts, f)
+    with open('Logs/subdomain_counts.log', 'wb') as f:
+        pickle.dump(counts, f)
+        f.close()
     return counts
 
 
@@ -158,7 +163,6 @@ def compsaveWordFrequencies(tokenlist): #computes and saves word frequencies
         f.close()
         freq = dict()
 
-    #most.tokens shouldb e moved to separate function
 
     for token in tokenlist:
         if token in freq:
@@ -204,12 +208,17 @@ def clearLogs():
 
 #TODO remove later
 if __name__ == '__main__':
+
     with open('Logs/wordfreqs.log', 'rb') as f:
         h = pickle.load(f) 
         print(h)
+        f.close()
     with open('Logs/simhashes.log', 'rb') as f:
         h = pickle.load(f)
         print(len(h))
+        f.close()
     with open('Logs/subdomain_counts.log', 'rb') as f:
         h = pickle.load(f)
         print(h)
+        f.close()
+    

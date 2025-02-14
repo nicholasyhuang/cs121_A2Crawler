@@ -29,7 +29,7 @@ class Worker(Thread):
                 f"using cache {self.config.cache_server}.")
             scraped_urls = scraper.scraper(tbd_url, resp)
             for scraped_url in scraped_urls:
-                #TODO check simhashes and duplicate urls here
+                #check duplicate urls here
                 if not scraped_url in self.frontier.visited_urls: #ADDED BY ME dupe check
                     self.frontier.add_url(scraped_url)
             self.frontier.mark_url_complete(tbd_url)

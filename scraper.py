@@ -20,7 +20,7 @@ def scraper(url, resp):
 
     
     tokens = helpers.tokenize(helpers.cleanHtml(page))
-    helpers.updateMostTokens(tokens)
+    helpers.updateMostTokens(tokens, url)
 
     cleanedTokens = helpers.cleanStopwords(tokens)
 
@@ -91,6 +91,8 @@ def is_valid(url):
         #TODO check url for strange things like repetitive patterns and weird query parameters here
         if re.match(r".*wp-json.*", parsed.path.lower()):
             return False
+        if re.match(r".*(\/feed)\/*$", parsed.path.lower()):
+            return False
         #if not robotsCheck(url):
         #    return False
         #maybe need to match wp-json, these seem to be worthless
@@ -100,7 +102,7 @@ def is_valid(url):
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1|" 
+            + r"|epub|dll|cnf|tgz|sha1|ppsx" #added ppsx
             + r"|thmx|mso|arff|rtf|jar|csv"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 

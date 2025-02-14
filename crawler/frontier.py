@@ -43,7 +43,7 @@ class Frontier(object):
 
     def _parse_save_file(self):
         ''' This function can be overridden for alternate saving techniques. '''
-        helpers.clearLogs() #I added this
+        #helpers.clearLogs() #I added this
         total_count = len(self.save)
         tbd_count = 0
         for url, completed in self.save.values():
